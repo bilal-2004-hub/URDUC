@@ -1,134 +1,58 @@
 %option noyywrap
-%{
-#include <iostream>
-#include <string>
-using namespace std;
+%option yylineno
 
-int line_no = 1;       
-int token_count = 0;   
+%{
+#include "b.tab.h"
+#include <iostream>
+using namespace std;
 %}
 
-DIGIT       [0-9]
-LETTER      [A-Za-z_]
-ID          {LETTER}({LETTER}|{DIGIT})*
-INTLIT      {DIGIT}+ 
-FLOATLIT    ({DIGIT}"."{DIGIT}*|{DIGIT}*"."{DIGIT}+)
-STRINGLIT   \"([^\"\\\n]|\\.)*\"
-CHARLIT     \'(\\.|[^\\'\n])\'
 
-
-KEYWORD     (jabtak|agar|warna|harbar|laotao|khaal|ha|nahe|baaz|hatta|mitao|daira|likho|ujliye|aur|nikalo|dalo)
-
-
-OP          (\+|\-|\*\*|~|\/|%|==|=|!=|>=|<=|>|<|&&|\|\||\+\+|--|;|,|\(|\)|\{|\}|\[|\])
-
-
-%x COMMENT
+DIGIT   [0-9]
+LETTER  [A-Za-z_]
+ID      {LETTER}({LETTER}|{DIGIT})*
+NUM     {DIGIT}+
+STRING  \"([^\"\\\n]|\\.)*\"
 
 %%
 
+[ \t]+          ;        
+\n              ;       
+"int"           { return INT; }
+"jabke"         { return JABKE; }
+"jabtak"        { return JABTAK; }
+"likho"         { return LIKHO; }
 
-[ \t\r]+                { /**/ }
+{ID}            { return ID; }
+{NUM}           { return NUM; }
+{STRING}        { return STRING; }
 
+"="             { return ASSIGN; }
+"+"             { return PLUS; }
+";"             { return SEMICOLON; }
+"("             { return LPAREN; }
+")"             { return RPAREN; }
+"{"             { return LBRACE; }
+"}"             { return RBRACE; }
 
-\n                      { line_no++; }
-
-
-"//".*                  { 
-                            token_count++;
-                            cout << "Line " << line_no 
-                                 << "\tTOKEN #" << token_count 
-                                 << "\tCOMMENT (single-line)\t: " << yytext << endl;
-                        }
-
-
-"/*"                    { BEGIN(COMMENT); }
-<COMMENT>{
-    "*/"                { 
-                            BEGIN(INITIAL); 
-                            token_count++;
-                            cout << "Line " << line_no 
-                                 << "\tTOKEN #" << token_count 
-                                 << "\tCOMMENT (multi-line)\t: " << yytext << endl;
-                        }
-    "\n"                { line_no++; }
-    .                   { /**/ }
+ .  {
+    cout << "Syntax Error at line "
+         << ": syntax error '" << yytext[0] << "'" << endl;
 }
-
-
-{KEYWORD}([^A-Za-z0-9_]|$) {
-    token_count++;
-    cout << "Line " << line_no 
-         << "\tTOKEN #" << token_count 
-         << "\tKEYWORD\t: " << yytext << endl;
-}
-
-
-"int"|"float"|"char"|"string"|"bool"|"khaal" {
-    token_count++;
-    cout << "Line " << line_no 
-         << "\tTOKEN #" << token_count 
-         << "\tDATATYPE\t: " << yytext << endl;
-}
-
-
-{ID} {
-    token_count++;
-    cout << "Line " << line_no 
-         << "\tTOKEN #" << token_count 
-         << "\tIDENTIFIER\t: " << yytext << endl;
-}
-
-
-{FLOATLIT} {
-    token_count++;
-    cout << "Line " << line_no 
-         << "\tTOKEN #" << token_count 
-         << "\tFLOAT_LITERAL\t: " << yytext << endl;
-}
-
-{INTLIT} {
-    token_count++;
-    cout << "Line " << line_no 
-         << "\tTOKEN #" << token_count 
-         << "\tINTEGER_LITERAL\t: " << yytext << endl;
-}
-
-{STRINGLIT} {
-    token_count++;
-    cout << "Line " << line_no 
-         << "\tTOKEN #" << token_count 
-         << "\tSTRING_LITERAL\t: " << yytext << endl;
-}
-
-{CHARLIT} {
-    token_count++;
-    cout << "Line " << line_no 
-         << "\tTOKEN #" << token_count 
-         << "\tCHAR_LITERAL\t: " << yytext << endl;
-}
-
-
-{OP} {
-    token_count++;
-    cout << "Line " << line_no 
-         << "\tTOKEN #" << token_count 
-         << "\tOPERATOR/SYMBOL\t: " << yytext << endl;
-}
-
-
-.   { /* */ }
-
 %%
 
-int main() {
-    yylex();  
 
-   
-    cout << "\n----------------------------------" << endl;
-    cout << "Total Lines  : " << line_no << endl;
-    cout << "Total Tokens : " << token_count << endl;
-    cout << "----------------------------------" << endl;
 
+int main()
+{
+    cout << "===== LEXICAL ANALYSIS STARTED =====" << endl;
+
+    while (yylex() != 0) {
+     
+    }
+
+    cout << "===== LEXICAL ANALYSIS COMPLETED =====" << endl;
+    cout << "Total lines scanned: " << yylineno << endl;
     return 0;
 }
+
