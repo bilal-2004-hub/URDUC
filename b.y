@@ -2,25 +2,30 @@
 #include <iostream>
 using namespace std;
 
-int yylex();
+extern int yylex();
+extern int line_no;
 void yyerror(const char *s);
-extern int yylineno;
 %}
 
+%define parse.error verbose
+%start program
+
 /* Tokens */
-%token INT JABKE JABTAK LIKHO
+%token INT JABTAK LIKHO
 %token ID NUM STRING
 %token ASSIGN PLUS SEMICOLON
 %token LPAREN RPAREN LBRACE RBRACE
 
 %%
 
+
+
 program
-    : statements
+    : statement_list
     ;
 
-statements
-    : statements statement
+statement_list
+    : statement_list statement
     | statement
     ;
 
@@ -29,27 +34,45 @@ statement
     | assignment
     | print_stmt
     | loop_stmt
+    | error SEMICOLON   { yyerror("Invalid statement"); yyerrok; }
     ;
 
+
 declaration
-    : INT ID SEMICOLON
+    : INT ID SEMICOLON 
+    | INT  ID  ASSIGN  NUM  SEMICOLON 
+    | INT ID error     { yyerror("Missing semicolon at end of declaration"); yyerrok; }
+    | INT  ID  ASSIGN  NUM  error  { yyerror("Missing semicolon at end of declaration"); yyerrok; }
     ;
+
 
 assignment
     : ID ASSIGN expression SEMICOLON
+    | ID ASSIGN error SEMICOLON { yyerror("Invalid assignment"); yyerrok; }
     ;
+
 
 print_stmt
     : LIKHO LPAREN STRING RPAREN SEMICOLON
+    | LIKHO error SEMICOLON { yyerror("Invalid print statement"); yyerrok; }
     ;
+
 
 loop_stmt
-    : JABTAK LPAREN expression RPAREN LBRACE statements RBRACE
+    : JABTAK LPAREN condition RPAREN LBRACE statement_list RBRACE
+    | JABTAK error LBRACE statement_list RBRACE
+        { yyerror("Invalid loop syntax"); yyerrok; }
     ;
 
+
+condition
+    : expression
+    ;
+
+
 expression
-    : expression PLUS term
-    | term
+    : term
+    | expression PLUS term
     ;
 
 term
@@ -59,20 +82,18 @@ term
 
 %%
 
+
 void yyerror(const char *s)
 {
-    
-    cout << "Syntax Error at line " << yylineno << ": " << s << endl;
+    cout << "Syntax Error at line " << line_no
+         << ": " << s << endl;
 }
+
 
 int main()
 {
-    cout << "===== SYNTAX ANALYSIS STARTED =====" << endl;
-
-    if (yyparse() == 0)
-        cout << "Program is syntactically correct ✅" << endl;
-
-    cout << "===== SYNTAX ANALYSIS COMPLETED =====" << endl;
+    cout << "\n===== URDU PARSER STARTED =====\n";
+    yyparse();
+    cout << "===== PARSER FINISHED =====\n";
     return 0;
 }
-
