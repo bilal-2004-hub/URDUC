@@ -1,10 +1,12 @@
 %option noyywrap
-%option yylineno
 
 %{
 #include "b.tab.h"
 #include <iostream>
 using namespace std;
+
+int line_no = 1;
+extern char* yytext;
 %}
 
 
@@ -16,16 +18,21 @@ STRING  \"([^\"\\\n]|\\.)*\"
 
 %%
 
-[ \t]+          ;        
-\n              ;       
+[ \t\r]+        { }
+\n              { line_no++; }
+
+
 "int"           { return INT; }
-"jabke"         { return JABKE; }
 "jabtak"        { return JABTAK; }
 "likho"         { return LIKHO; }
 
+
 {ID}            { return ID; }
+
+
 {NUM}           { return NUM; }
 {STRING}        { return STRING; }
+
 
 "="             { return ASSIGN; }
 "+"             { return PLUS; }
@@ -35,24 +42,7 @@ STRING  \"([^\"\\\n]|\\.)*\"
 "{"             { return LBRACE; }
 "}"             { return RBRACE; }
 
- .  {
-    cout << "Syntax Error at line "
-         << ": syntax error '" << yytext[0] << "'" << endl;
-}
+
+.               { return yytext[0]; }
+
 %%
-
-
-
-int main()
-{
-    cout << "===== LEXICAL ANALYSIS STARTED =====" << endl;
-
-    while (yylex() != 0) {
-     
-    }
-
-    cout << "===== LEXICAL ANALYSIS COMPLETED =====" << endl;
-    cout << "Total lines scanned: " << yylineno << endl;
-    return 0;
-}
-
